@@ -1,0 +1,11 @@
+services:
+
+  api:
+    container_name: flask_api
+    restart: always
+    build: ./api
+    volumes: ['./api:/api']
+    expose:
+      - "5000"
+    ports:
+      - "5000:5000"

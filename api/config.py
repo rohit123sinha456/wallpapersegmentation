@@ -1,0 +1,2 @@
+#SHA256(quleep_wallpaper_segmentation)
+TOKEN="c0110aa4490cd8a4e5c024c4779d976f6927b6b0e4b12c2675e9558a453e933c"
