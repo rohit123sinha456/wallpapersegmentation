@@ -11,5 +11,5 @@
 - run ```python -m venv env```
 - Activate the virtual env ``` source env/bin/activate```
 - Run ```pip install -r requirements.txt```
-- Run ```gunicorn -w 3 -b :5000 -t 0 --reload --daemon wsgi:app
+- Run ```gunicorn -w 3 -b :5000 -t 0 --reload --daemon wsgi:app```
 
