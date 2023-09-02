@@ -17,7 +17,10 @@ def load_model():
 
     # image_processor = AutoImageProcessor.from_pretrained("facebook/maskformer-swin-base-ade")
     # model = MaskFormerForInstanceSegmentation.from_pretrained("facebook/maskformer-swin-base-ade")
-def infer(imagepath,designimgpath,outputpath):
+def infer(imagepath,designimgpath,outputpath,mode = 0):
+    #mode 0 for walls
+    #model 3 for floors
+    #model 28 for carpet
     global feature_extractor,model
     # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
     # image = Image.open(requests.get(url, stream=True).raw)
@@ -35,10 +38,15 @@ def infer(imagepath,designimgpath,outputpath):
     result = feature_extractor.post_process_panoptic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
     # we refer to the demo notebooks for visualization (see "Resources" section in the MaskFormer docs)
     predicted_panoptic_map = result["segmentation"]
+
+    # Checking if the requested feature is in the image 
+    if (mode not in [info['label_id'] for info in result['segments_info']]):
+        return 0
+
     # Finding the id of the wall from the segment predictions
     # facebook/maskformer-swin-base-coco" -> 131
     # facebook/maskformer-swin-base-ade => 0
-    wallitem = next(item for item in result['segments_info'] if item["label_id"] == 0)
+    wallitem = next(item for item in result['segments_info'] if item["label_id"] == mode)
     wallitemid = wallitem['id']
 
     #creating empty panoptic map
@@ -70,3 +78,4 @@ def infer(imagepath,designimgpath,outputpath):
     imagearray = imagearray.astype(np.uint8)
     plt.imsave(outputpath,imagearray)
     print('Inference done!')
+    return 1

@@ -50,34 +50,45 @@ def get_image():
 def success():
     st = 0
     et = 0
+    datasend = None
+    detectiomodemappings = {"walls":0,"floors":3,"carpet":28}
+    acceptabledetectionmode = detectiomodemappings.keys()
     access_token = request.headers.get('auth-token')
     if(access_token != TOKEN):
         return jsonify({"data":"Invalid auth-token in Header"}),401
     if request.method == 'POST':
-        if 'wallimg' not in request.files or 'designimg' not in request.files:
-            return jsonify({"data":"No file Selected"}),400
+        if 'wallimg' not in request.files or 'designimg' not in request.files or "detectionmode" not in request.form:
+            return jsonify({"data":"No file/mode Selected"}),400
         wallimg = request.files['wallimg']
         designimg = request.files['designimg']
-        if designimg.filename == '' or wallimg.filename == '':
-            return jsonify({"data":"No file Selected"}),400
+        detectionmode = request.form['detectionmode']
+        if designimg.filename == '' or wallimg.filename == '' or detectionmode not in acceptabledetectionmode:
+            return jsonify({"data":"No file Selected/Improper detection mode Selected(Choose between walls/floors)"}),400
         if wallimg and allowed_file(wallimg.filename) and designimg and allowed_file(designimg.filename):
             wallimgfilename = secure_filename(wallimg.filename)
             wallimgfilepath = os.path.join(app.config['WALL_UPLOAD_FOLDER'], wallimgfilename)
             designimgfilename = secure_filename(designimg.filename)
             designimgfilepath = os.path.join(app.config['WALL_UPLOAD_FOLDER'], designimgfilename)
-
+            detectionmodevalue  = detectiomodemappings[detectionmode]
             wallimg.save(wallimgfilepath)
             designimg.save(designimgfilepath)
+
             unique_id = uuid.uuid4()
             outputimgfilepath = os.path.join(app.config['OUTPUT_IMAGE_FOLDER'], str(unique_id)+".jpg")
+
             st = time.time()
-            infer(wallimgfilepath,designimgfilepath,outputimgfilepath)
+            modelinferresp = infer(wallimgfilepath,designimgfilepath,outputimgfilepath,mode = detectionmodevalue)
             et = time.time()
+
         else:
             return jsonify({"data":"Wall Image / Desgn Image  File Format not supported"}),400
+        if (modelinferresp == 0):
+            datasend = "Requested Feature not detected in the image"
+        else:
+            datasend = str(unique_id)+".jpg"
         responsedata = {
             "inference_time":(et - st),
-            "data":str(unique_id)+".jpg"
+            "data":datasend
         }
         return jsonify(responsedata),200
 
