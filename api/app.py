@@ -86,6 +86,7 @@ def success():
             datasend = "Requested Feature not detected in the image"
         else:
             datasend = str(unique_id)+".jpg"
+            return send_file(outputimgfilepath, mimetype='image/jpg')
         responsedata = {
             "inference_time":(et - st),
             "data":datasend
