@@ -19,6 +19,13 @@
 - After running the app
 - open the wallsegment.postman_collection.json file in POSTMAN app
 - Use the POST Request to get the infered image name from the JSON returned
+    - In the header of the request set a key value pair
+        -  key = auth-token
+        - SHA256(quleep_wallpaper_segmentation)
+    - In the body set request type as form data and give 3 key value pairs
+        - Key = wallimg | value = image ( send the image NOT the link of the Image)
+        - Key = designimg | value = image of the design ( send the image NOT the link of the Image)
+        -  Key = detectionmode | value = 
 - Use the GET request to get the image (The image name from the revious step must be passed on as the query parameter)
 
 

@@ -3,6 +3,9 @@ from fileinput import filename
 import os
 from flask import Flask, flash, request, redirect, url_for,jsonify
 from flask import send_file
+from flask_cors import CORS
+import base64
+
 from werkzeug.utils import secure_filename
 import sys
 import time
@@ -22,6 +25,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 
 app = Flask(__name__)
+CORS(app)
+
 app.config['WALL_UPLOAD_FOLDER'] = WALL_UPLOAD_FOLDER
 app.config['DESIGN_UPLOAD_FOLDER'] = DESIGN_UPLOAD_FOLDER
 app.config['OUTPUT_IMAGE_FOLDER'] = OUTPUT_IMAGE_FOLDER
@@ -85,8 +90,12 @@ def success():
         if (modelinferresp == 0):
             datasend = "Requested Feature not detected in the image"
         else:
-            datasend = str(unique_id)+".jpg"
-            return send_file(outputimgfilepath, mimetype='image/jpg')
+            # datasend = str(unique_id)+".jpg"
+            # return send_file(outputimgfilepath, mimetype='image/jpg')
+            imgencode = ""
+            with open(outputimgfilepath, "rb") as img_file:
+                imgencode = base64.b64encode(img_file.read())
+            return imgencode
         responsedata = {
             "inference_time":(et - st),
             "data":datasend
