@@ -15,7 +15,8 @@ import time
 from Transformer_Segment.model import load_model,infer
 from config import TOKEN
 import uuid
-
+import warnings
+warnings.simplefilter("ignore")
 
 
 WALL_UPLOAD_FOLDER = os.path.join(os.getcwd(),'wallimages')
@@ -43,7 +44,7 @@ def allowed_file(filename):
 
 @app.route('/api/v1')
 def main():
-    return "Hello"
+    return "API for Detecting Walls and Floors in an Image"
 
 @app.route('/api/v1/get_prediction')
 def get_image():
@@ -62,45 +63,60 @@ def success():
     if(access_token != TOKEN):
         return jsonify({"data":"Invalid auth-token in Header"}),401
     if request.method == 'POST':
-        if 'wallimg' not in request.files or 'designimg' not in request.files or "detectionmode" not in request.form:
-            return jsonify({"data":"No file/mode Selected"}),400
-        wallimg = request.files['wallimg']
-        designimg = request.files['designimg']
-        detectionmode = request.form['detectionmode']
-        if designimg.filename == '' or wallimg.filename == '' or detectionmode not in acceptabledetectionmode:
-            return jsonify({"data":"No file Selected/Improper detection mode Selected(Choose between walls/floors)"}),400
-        if wallimg and allowed_file(wallimg.filename) and designimg and allowed_file(designimg.filename):
-            wallimgfilename = secure_filename(wallimg.filename)
-            wallimgfilepath = os.path.join(app.config['WALL_UPLOAD_FOLDER'], wallimgfilename)
-            designimgfilename = secure_filename(designimg.filename)
-            designimgfilepath = os.path.join(app.config['WALL_UPLOAD_FOLDER'], designimgfilename)
-            detectionmodevalue  = detectiomodemappings[detectionmode]
-            wallimg.save(wallimgfilepath)
-            designimg.save(designimgfilepath)
+        requestjson = request.json
+        wallimgbase64 = requestjson.get('wallimg')
+        designimgbase64 = requestjson.get('designimg')
+        detectionmode = requestjson.get('detectionmode')
+        if wallimgbase64 is None or designimgbase64 is None or detectionmode is None:
+            return jsonify({"data":"No file/mode Sent"}),400
 
-            unique_id = uuid.uuid4()
-            outputimgfilepath = os.path.join(app.config['OUTPUT_IMAGE_FOLDER'], str(unique_id)+".jpg")
+        if detectionmode not in acceptabledetectionmode:
+            return jsonify({"data":"Improper detection mode Selected(Choose between walls/floors)"}),400
 
-            st = time.time()
-            modelinferresp = infer(wallimgfilepath,designimgfilepath,outputimgfilepath,mode = detectionmodevalue)
-            et = time.time()
+        # Converting and Saving Wall Images
+        unique_id_wallimg = uuid.uuid4()
+        wallimgfilepath = os.path.join(app.config['WALL_UPLOAD_FOLDER'], str(unique_id_wallimg)+".jpg")
+        with open(wallimgfilepath, "wb") as fh:
+            try:
+                wallimgbase64_data = wallimgbase64.split(',')[1]
+                fh.write(base64.b64decode(wallimgbase64_data))
+                #fh.write(base64.urlsafe_b64decode(wallimgbase64))
+            except Exception as e:
+                return jsonify({"data":str(e),"image_name":"Wall Image"}),400
 
-        else:
-            return jsonify({"data":"Wall Image / Desgn Image  File Format not supported"}),400
+        # Converting and Saving Design Images
+        unique_id_designimg = uuid.uuid4()
+        designimgfilepath = os.path.join(app.config['DESIGN_UPLOAD_FOLDER'], str(unique_id_designimg)+".jpg")
+        with open(designimgfilepath, "wb") as fh:
+            try:
+                designimgbase64_data = designimgbase64.split(',')[1]
+                fh.write(base64.b64decode(designimgbase64_data))
+                # fh.write(base64.urlsafe_b64decode(designimgbase64))
+            except Exception as e:
+                return jsonify({"data":str(e),"image_name":"Design Image"}),400
+
+        
+        # Getting the Model Code for Detection Mode Selected
+        detectionmodevalue  = detectiomodemappings[detectionmode]
+        
+        # Generating unique name for output Images
+        unique_id = uuid.uuid4()
+        outputimgfilepath = os.path.join(app.config['OUTPUT_IMAGE_FOLDER'], str(unique_id)+".jpg")
+
+        st = time.time()
+        modelinferresp = infer(wallimgfilepath,designimgfilepath,outputimgfilepath,mode = detectionmodevalue)
+        et = time.time()
+
         if (modelinferresp == 0):
-            datasend = "Requested Feature not detected in the image"
+            # If Model Infered Correctly as the selected mode was not found in the image  
+            datasend = {"data":"Requested Feature not detected in the image"}
+            return jsonify(responsedata),200
         else:
-            # datasend = str(unique_id)+".jpg"
-            # return send_file(outputimgfilepath, mimetype='image/jpg')
+            # If Model Infered Correctly Sending Base64 of Output Image
             imgencode = ""
             with open(outputimgfilepath, "rb") as img_file:
                 imgencode = base64.b64encode(img_file.read())
             return imgencode
-        responsedata = {
-            "inference_time":(et - st),
-            "data":datasend
-        }
-        return jsonify(responsedata),200
 
 if __name__ == '__main__':
 	app.run(debug=True)
