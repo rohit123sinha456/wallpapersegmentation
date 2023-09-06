@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Segmented Image</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        .selected-image {
+            border: 2px solid blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Segmented Image (Local Version)</h1>
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <form id="segment-form">
+                    <div class="form-group">
+                        <label for="img-file">Image File:</label>
+                        <input type="file" class="form-control-file" id="fileinput">
+                    </div>
+                    <div class="form-group">
+                        <label for="distance-input">Wall:</label>
+                        <input type="text" class="form-control" id="wall" name="wall" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="distance-input">design:</label>
+                        <input type="text" class="form-control" id="design" name="design" required>
+                    </div>
+                    <div id="processing" style="display: none;">
+                        <p>Processing...</p>
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="image-url-input" name="image-url-input" value="">
+                    <button type="submit" class="btn btn-primary">Select a wallpaper </button>
+                </form>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <h2>Select an Image:</h2>
+                <div class="row">
+                    <div class="col-sm-6 col-md-3">
+                        <img class="img-thumbnail"
+                            src="https://quleeptest.s3.ap-south-1.amazonaws.com/12D38B33FE/81273-1%20%28CA02-1%29_icon_256x256.png"
+                            alt="Image 1" data-url="https://s3.amazonaws.com/my-bucket/image1.jpg">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <img class="img-thumbnail"
+                            src="https://quleeptest.s3.ap-south-1.amazonaws.com/1EEB8B711D/81265-1%20%28CA15-1%29_icon_256x256.png"
+                            alt="Image 2" data-url="https://s3.amazonaws.com/my-bucket/image2.jpg">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <img class="img-thumbnail"
+                            src="https://quleeptest.s3.ap-south-1.amazonaws.com/395C70C507/81270-8%20%28CA01-8%29_icon_256x256.png"
+                            alt="Image 3" data-url="https://s3.amazonaws.com/my-bucket/image3.jpg">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <img class="img-thumbnail"
+                            src="https://quleeptest.s3.ap-south-1.amazonaws.com/A080CED26C/81267-4%20%28CA11-2%29_wallpaper_480x640.png"
+                            alt="Image 4" data-url="https://s3.amazonaws.com/my-bucket/image4.jpg">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="segmented-img-container" class="mt-5 d-none">
+            <h2>Segmented Image:</h2>
+            <img id="segmented-img" src="">
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $("#segment-form").submit(function (e) {
+                e.preventDefault();
+                $("#processing").show(); // show processing animation
+                var img_file = $("#fileinput")[0].files[0];
+                var reader = new FileReader();
+                reader.onloadend = function () {
+                    var base64_image = reader.result;
+                    var distance = $("#distance-input").val();
+                    var image_url = $("#image-url-input").val();
+                    console.log(base64_image);
+                }
+                reader.readAsDataURL(img_file);
+                    var wall = ''//$("#wall").val();
+                    var design = $("#design").val();
+                    var image_url = $("#image-url-input").val();
+                    console.log(image_url);
+                    $.ajax({
+                        type: "POST",
+                        url: "http://localhost:5000/api/v1/infer",
+                        headers: { 'auth-token': 'c0110aa4490cd8a4e5c024c4779d976f6927b6b0e4b12c2675e9558a453e933c' },
+                        data: JSON.stringify({ "wallimg": wall, "designimg": design, "detectionmode": "walls" }),
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        success: function (response) {
+                            var img = new Image();
+                            console.log(response.segmented_image_url);
+                            img.onload = function () {
+                                $("#segmented-img").attr("src", response.segmented_image_url);
+                                $("#segmented-img-container").removeClass("d-none");
+                                $("#processing").hide(); // hide processing animation
+                            };
+                            img.src = response.segmented_image_url;
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(xhr.responseText);
+                            $("#processing").hide(); // hide processing animation
+                        }
+                    });
+                
+                
+            
+            });
+
+            $(".img-thumbnail").click(function () {
+
+                // remove the class from all other images
+                $(".img-thumbnail").removeClass("selected-image");
+                // add the class to the clicked image
+                $(this).addClass("selected-image");
+                var image_url = $(this).attr("src");
+                console.log(image_url);
+
+                $("#image-url-input").val(image_url); // set the URL in the hidden input field
+                console.log($("#image-url-input").val());
+            });
+        });
+    </script>
+</body>
+
+</html>
