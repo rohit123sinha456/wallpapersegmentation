@@ -5,6 +5,8 @@ from flask import Flask, flash, request, redirect, url_for,jsonify
 from flask import send_file
 from flask_cors import CORS
 import base64
+from PIL import Image
+import requests
 
 from werkzeug.utils import secure_filename
 import sys
@@ -65,9 +67,9 @@ def success():
     if request.method == 'POST':
         requestjson = request.json
         wallimgbase64 = requestjson.get('wallimg')
-        designimgbase64 = requestjson.get('designimg')
+        designimgurl = requestjson.get('designimg')
         detectionmode = requestjson.get('detectionmode')
-        if wallimgbase64 is None or designimgbase64 is None or detectionmode is None:
+        if wallimgbase64 is None or designimgurl is None or detectionmode is None:
             return jsonify({"data":"No file/mode Sent"}),400
 
         if detectionmode not in acceptabledetectionmode:
@@ -87,13 +89,15 @@ def success():
         # Converting and Saving Design Images
         unique_id_designimg = uuid.uuid4()
         designimgfilepath = os.path.join(app.config['DESIGN_UPLOAD_FOLDER'], str(unique_id_designimg)+".jpg")
-        with open(designimgfilepath, "wb") as fh:
-            try:
-                designimgbase64_data = designimgbase64.split(',')[1]
-                fh.write(base64.b64decode(designimgbase64_data))
-                # fh.write(base64.urlsafe_b64decode(designimgbase64))
-            except Exception as e:
-                return jsonify({"data":str(e),"image_name":"Design Image"}),400
+        designimage = Image.open(requests.get(designimgurl, stream=True).raw)
+        designimage.save(designimgfilepath)
+        # with open(designimgfilepath, "wb") as fh:
+        #     try:
+        #         designimgbase64_data = designimgbase64.split(',')[1]
+        #         fh.write(base64.b64decode(designimgbase64_data))
+        #         # fh.write(base64.urlsafe_b64decode(designimgbase64))
+        #     except Exception as e:
+        #         return jsonify({"data":str(e),"image_name":"Design Image"}),400
 
         
         # Getting the Model Code for Detection Mode Selected

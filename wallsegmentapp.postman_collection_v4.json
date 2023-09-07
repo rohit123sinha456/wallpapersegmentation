@@ -1,0 +1,105 @@
+{
+	"info": {
+		"_postman_id": "c9fa0db1-604d-47d7-9102-9b1b8c800c01",
+		"name": "wallsegmentapp",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "POST Request for Inference",
+			"request": {
+				"auth": {
+					"type": "bearer"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "c0110aa4490cd8a4e5c024c4779d976f6927b6b0e4b12c2675e9558a453e933c",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "wallimg",
+							"type": "file",
+							"src": "/Users/rohitsinha/Documents/wallsegtransformer/test_imgs/test_2.jpeg"
+						},
+						{
+							"key": "designimg",
+							"type": "file",
+							"src": "/Users/rohitsinha/Downloads/design.jpeg"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:5000/api/v1/infer",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1",
+						"infer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Request for Inference  json",
+			"request": {
+				"auth": {
+					"type": "bearer"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "c0110aa4490cd8a4e5c024c4779d976f6927b6b0e4b12c2675e9558a453e933c",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "wallimg",
+							"type": "file",
+							"src": "/Users/rohitsinha/Documents/wallsegtransformer/test_imgs/test_2.jpeg"
+						},
+						{
+							"key": "designimg",
+							"type": "file",
+							"src": "/Users/rohitsinha/Downloads/design.jpeg"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:5000/api/v1/infer",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1",
+						"infer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Request in the browser to get the image",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
