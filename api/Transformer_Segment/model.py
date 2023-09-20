@@ -5,16 +5,19 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-
+import torch
 feature_extractor = None
 model = None
-
+device = torch.device('cpu')
 def load_model():
-    global feature_extractor,model
+    global feature_extractor,model,device
     # load MaskFormer fine-tuned on COCO panoptic segmentation
+    device = 
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
     feature_extractor = MaskFormerFeatureExtractor.from_pretrained("facebook/maskformer-swin-base-ade")
     model = MaskFormerForInstanceSegmentation.from_pretrained("facebook/maskformer-swin-base-ade")
-
+    model.to(device)
     # image_processor = AutoImageProcessor.from_pretrained("facebook/maskformer-swin-base-ade")
     # model = MaskFormerForInstanceSegmentation.from_pretrained("facebook/maskformer-swin-base-ade")
 def infer(imagepath,designimgpath,outputpath,mode = 0):
@@ -27,7 +30,7 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     image = Image.open(imagepath).convert('RGB')
     inputs = feature_extractor(images=image, return_tensors="pt")
     inputs = feature_extractor(images=image, return_tensors="pt")
-
+    inputs.to(device)
     outputs = model(**inputs)
     # model predicts class_queries_logits of shape `(batch_size, num_queries)`
     # and masks_queries_logits of shape `(batch_size, num_queries, height, width)`
