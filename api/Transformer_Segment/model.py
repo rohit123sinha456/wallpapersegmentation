@@ -24,7 +24,7 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     #mode 0 for walls
     #model 3 for floors
     #model 28 for carpet
-    global feature_extractor,model
+    global feature_extractor,model,device
     # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
     # image = Image.open(requests.get(url, stream=True).raw)
     image = Image.open(imagepath).convert('RGB')
@@ -40,7 +40,7 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     # you can pass them to feature_extractor for postprocessing
     result = feature_extractor.post_process_panoptic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
     # we refer to the demo notebooks for visualization (see "Resources" section in the MaskFormer docs)
-    predicted_panoptic_map = result["segmentation"]
+    predicted_panoptic_map = result["segmentation"].cpu()
 
     # Checking if the requested feature is in the image 
     if (mode not in [info['label_id'] for info in result['segments_info']]):
