@@ -26,6 +26,8 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     global feature_extractor,model,device
     # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
     # image = Image.open(requests.get(url, stream=True).raw)
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     image = Image.open(imagepath).convert('RGB')
     inputs = feature_extractor(images=image, return_tensors="pt")
     inputs = feature_extractor(images=image, return_tensors="pt")
