@@ -1,3 +1,7 @@
+### Requirements
+python version - 3.9.6 [https://tecadmin.net/install-python-3-9-on-amazon-linux/]
+pip version - 21.2.4 [https://sparkbyexamples.com/python/upgrade-pip-latest-or-specific-version/]
+
 ### Methods to deploy this code
 - git clone this repository
 - cd intp api

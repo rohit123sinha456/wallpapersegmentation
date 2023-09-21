@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import torch
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
+
 feature_extractor = None
 model = None
 device = torch.device('cpu')
@@ -16,7 +19,8 @@ def load_model():
         device = torch.device("cuda")
     feature_extractor = MaskFormerFeatureExtractor.from_pretrained("facebook/maskformer-swin-base-ade")
     model = MaskFormerForInstanceSegmentation.from_pretrained("facebook/maskformer-swin-base-ade")
-    model.to(device)
+    # model.to(device)
+    print("Model Successfully Loaded")
     # image_processor = AutoImageProcessor.from_pretrained("facebook/maskformer-swin-base-ade")
     # model = MaskFormerForInstanceSegmentation.from_pretrained("facebook/maskformer-swin-base-ade")
 def infer(imagepath,designimgpath,outputpath,mode = 0):
@@ -28,15 +32,16 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     # image = Image.open(requests.get(url, stream=True).raw)
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
+    model.to(device)
     image = Image.open(imagepath).convert('RGB')
     inputs = feature_extractor(images=image, return_tensors="pt")
-    inputs = feature_extractor(images=image, return_tensors="pt")
+    # inputs = feature_extractor(images=image, return_tensors="pt")
     inputs.to(device)
     outputs = model(**inputs)
     # model predicts class_queries_logits of shape `(batch_size, num_queries)`
     # and masks_queries_logits of shape `(batch_size, num_queries, height, width)`
-    class_queries_logits = outputs.class_queries_logits
-    masks_queries_logits = outputs.masks_queries_logits
+    # class_queries_logits = outputs.class_queries_logits
+    # masks_queries_logits = outputs.masks_queries_logits
 
     # you can pass them to feature_extractor for postprocessing
     result = feature_extractor.post_process_panoptic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
@@ -82,4 +87,9 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     imagearray = imagearray.astype(np.uint8)
     plt.imsave(outputpath,imagearray)
     print('Inference done!')
+    if torch.cuda.is_available():
+        model.to('cpu')
+        del inputs,outputs,result
+        torch.cuda.empty_cache()
+    print(torch.cuda.memory_allocated())
     return 1
