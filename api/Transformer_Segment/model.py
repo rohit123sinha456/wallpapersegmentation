@@ -12,7 +12,6 @@ device = torch.device('cpu')
 def load_model():
     global feature_extractor,model,device
     # load MaskFormer fine-tuned on COCO panoptic segmentation
-    device = 
     if torch.cuda.is_available():
         device = torch.device("cuda")
     feature_extractor = MaskFormerFeatureExtractor.from_pretrained("facebook/maskformer-swin-base-ade")
