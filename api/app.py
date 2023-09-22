@@ -14,7 +14,7 @@ import time
 
 # sys.path.append('CSAIL_Segment')
 # from test import load_model,infer
-from Transformer_Segment.model import load_model,infer
+from Transformer_Segment.model_gpu import load_model,infer
 from config import TOKEN
 import uuid
 import warnings
