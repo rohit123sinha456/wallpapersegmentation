@@ -44,7 +44,7 @@ def allowed_file(filename):
 
 
 @app.route('/')
-def main():
+def homeroute():
     return "API for Detecting Walls and Floors in an Image is working"
 	
 @app.route('/api/v1')
