@@ -43,7 +43,10 @@ def allowed_file(filename):
 
 
 
-
+@app.route('/')
+def main():
+    return "API for Detecting Walls and Floors in an Image is working"
+	
 @app.route('/api/v1')
 def main():
     return "API for Detecting Walls and Floors in an Image"
