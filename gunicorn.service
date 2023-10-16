@@ -1,0 +1,9 @@
+[Unit]
+Description=Gunicorn service
+
+[Service]
+ExecStart=/home/ec2-user/wallpapersegmentation/env/bin/gunicorn -w 6 -b :5000 -t 0 --log-file /var/log/gunicorn.log --reload --daemon --chdir /home/ec2-user/wallpapersegmentation/api/ wsgi:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
