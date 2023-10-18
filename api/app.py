@@ -7,7 +7,7 @@ from flask_cors import CORS
 import base64
 from PIL import Image
 import requests
-
+import torch
 from werkzeug.utils import secure_filename
 import sys
 import time
@@ -110,10 +110,12 @@ def success():
         # Generating unique name for output Images
         unique_id = uuid.uuid4()
         outputimgfilepath = os.path.join(app.config['OUTPUT_IMAGE_FOLDER'], str(unique_id)+".jpg")
-
-        st = time.time()
-        modelinferresp = infer(wallimgfilepath,designimgfilepath,outputimgfilepath,mode = detectionmodevalue)
-        et = time.time()
+        try:
+            st = time.time()
+            modelinferresp = infer(wallimgfilepath,designimgfilepath,outputimgfilepath,mode = detectionmodevalue)
+            et = time.time()
+        except:
+            sys.exit(1)
 
         if (modelinferresp == 0):
             # If Model Infered Correctly as the selected mode was not found in the image  
