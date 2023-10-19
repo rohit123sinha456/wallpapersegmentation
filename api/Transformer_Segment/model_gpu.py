@@ -26,7 +26,6 @@ def create_wall_overlay(mask,dsgn,woverlay):
                 woverlay[i][j]= p
     return woverlay
 
-from numba import njit, prange
 @njit(parallel=True)
 def create_output_image(imagearray,walloverlayarray):
     h,w,_ =  walloverlayarray.shape
@@ -35,6 +34,17 @@ def create_output_image(imagearray,walloverlayarray):
             if(walloverlayarray[i][j].sum() > 0 ):
                 imagearray[i][j] =  walloverlayarray[i][j]
     return imagearray.astype(np.uint8)
+
+@njit(parallel=True)
+def create_image_with_shadow(img_gray,hsv_image,walloverlayarray):
+  h,w,_ =  hsv_image.shape
+  for i in prange(0,h):
+    for j in prange(0,w):
+      if(walloverlayarray[i][j].sum() > 0 ):
+        hsv_image[i][j][2] = hsv_image[i][j][2] - (img_gray[i][j]/2)
+  print(hsv_image.shape)
+  return hsv_image.astype(np.uint8)
+
 
 
 def load_model():
@@ -96,11 +106,23 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     # Copying the design pixels into the wall overlap images
     walloverlayarray = create_wall_overlay(color_predicted_panoptic_map,np.array(design),np.array(walloverlay))
 
-    # Creating output image
+    # Creating output image and HSV of output image
     imagearray = np.array(image)
     imagearray = create_output_image(imagearray,walloverlayarray)
+    hsv_image = cv2.cvtColor(imagearray, cv2.COLOR_RGB2HSV)
 
-    plt.imsave(outputpath,imagearray)
+    # Getting Shadows of the original Image
+    testgray = cv2.imread(imagepath)
+    blurred_image = cv2.GaussianBlur(testgray, (5, 5), 0)
+    ret, thresholded_image = cv2.threshold(blurred_image, 100, 255, cv2.THRESH_BINARY)
+    shadow = thresholded_image - blurred_image
+    img_gray = cv2.cvtColor(shadow, cv2.COLOR_RGB2GRAY)
+
+    # Creating Image with Shadow
+    with_shadow_image = create_image_with_shadow(img_gray,hsv_image,walloverlayarray)
+    imgarray_with_shadow = cv2.cvtColor(with_shadow_image, cv2.COLOR_HSV2RGB)
+
+    plt.imsave(outputpath,imgarray_with_shadow)
     print('Inference done!')
     if torch.cuda.is_available():
         model.to('cpu')
