@@ -38,10 +38,13 @@ def create_output_image(imagearray,walloverlayarray):
 @njit(parallel=True)
 def create_image_with_shadow(img_gray,hsv_image,walloverlayarray):
   h,w,_ =  hsv_image.shape
+  hsvmin = np.min(hsv_image[:,:,2])
+  hsvmax = np.max(hsv_image[:,:,2])
   for i in prange(0,h):
     for j in prange(0,w):
       if(walloverlayarray[i][j].sum() > 0 ):
-        hsv_image[i][j][2] = hsv_image[i][j][2] - (img_gray[i][j]/2)
+        # hsv_image[i][j][2] = hsv_image[i][j][2] - (img_gray[i][j]/2)
+        hsv_image[i][j][2] = abs(hsv_image[i][j][2] - (((img_gray[i][j]/2)-hsvmin)/(hsvmax-hsvmin))*100)
   print(hsv_image.shape)
   return hsv_image.astype(np.uint8)
 
