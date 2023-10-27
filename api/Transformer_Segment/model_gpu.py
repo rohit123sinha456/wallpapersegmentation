@@ -44,7 +44,7 @@ def create_image_with_shadow(img_gray,hsv_image,walloverlayarray):
     for j in prange(0,w):
       if(walloverlayarray[i][j].sum() > 0 ):
         # hsv_image[i][j][2] = hsv_image[i][j][2] - (img_gray[i][j]/2)
-        hsv_image[i][j][2] = abs(hsv_image[i][j][2] - (((img_gray[i][j]/2)-hsvmin)/(hsvmax-hsvmin))*100)
+        hsv_image[i][j][2] = abs(hsv_image[i][j][2] - (((img_gray[i][j]/1)-hsvmin)/(hsvmax-hsvmin))*100)
   print(hsv_image.shape)
   return hsv_image.astype(np.uint8)
 
