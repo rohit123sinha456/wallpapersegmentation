@@ -48,7 +48,33 @@ def create_image_with_shadow(img_gray,hsv_image,walloverlayarray):
   print(hsv_image.shape)
   return hsv_image.astype(np.uint8)
 
+def create_tile_perspective(design,image,factor):
+  INITIAL_SIZE = 500
+  w,h = image.size
+  opencv_img = np.array(design)
+  tile = np.tile(opencv_img,(4,4,1))
+  src = tile
+  r = INITIAL_SIZE / src.shape[1]
+  dim = (INITIAL_SIZE, int(src.shape[0] * r))
+  src = cv2.resize(src, dim, interpolation=cv2.INTER_AREA)
 
+  h,w,_ = src.shape
+  srcs = np.array([[0,0],[0,w],[h,w],[h,0]],np.float32)
+  dst = np.array([[0,((1*w/2)-150)],[0,((1*w/2)+150)],[h,w],[h,0]],np.float32)
+
+  # Get the homographic transform
+  M1 = cv2.getPerspectiveTransform(srcs,dst)
+
+  # Warp the image
+  dst = cv2.warpPerspective(src, M1, (src.shape[1], src.shape[0]),flags = cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue = [0, 0, 0, 0])
+  dst = cv2.rotate(dst, cv2.ROTATE_90_CLOCKWISE)
+  cropped_design = dst[:,100:400]
+
+  design_pil = Image.fromarray(cropped_design)
+  width, height = design_pil.size
+  resize_ratio = min(w / width, h / (height*factor))
+  new_design = design_pil.resize((int(width * resize_ratio), int(height * resize_ratio)))
+  return new_design
 
 def load_model():
     global feature_extractor,model,device
@@ -65,6 +91,8 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     #mode 0 for walls
     #model 3 for floors
     #model 28 for carpet
+    FLOOR_MODE = 3
+    FLOOR_FACTOR = 0.4
     global feature_extractor,model,device
     # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
     # image = Image.open(requests.get(url, stream=True).raw)
@@ -106,6 +134,9 @@ def infer(imagepath,designimgpath,outputpath,mode = 0):
     w,h = image.size
     walloverlay = Image.new("RGB", (w, h))
 
+    # Creating Image of floor perspective 
+    if(mode == FLOOR_MODE):
+       design = create_tile_perspective(design,image,FLOOR_FACTOR)
     # Copying the design pixels into the wall overlap images
     walloverlayarray = create_wall_overlay(color_predicted_panoptic_map,np.array(design),np.array(walloverlay))
 
