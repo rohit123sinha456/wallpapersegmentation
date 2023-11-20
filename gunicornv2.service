@@ -2,7 +2,7 @@
 Description=Gunicorn service
 
 [Service]
-ExecStart=/home/ec2-user/wallpapersegmentationv2/env/bin/gunicorn -w 3 -b :5002 -t 0 --log-file /home/ec2-user/gunicornv2.log --chdir /home/ec2-user/wallpapersegmentationv2/api/ wsgi:app
+ExecStart=/home/ec2-user/wallpapersegmentationv2/env/bin/gunicorn -w 3 -b :5002 -t 0 --log-file /home/ec2-user/gunicornv2_floor_exp.log --chdir /home/ec2-user/wallpapersegmentationv2/api/ wsgi:app
 Restart=always
 RestartSec=5
 
