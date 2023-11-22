@@ -49,31 +49,32 @@ def create_image_with_shadow(img_gray,hsv_image,walloverlayarray):
   return hsv_image.astype(np.uint8)
 
 def create_tile_perspective(design,image,factor):
-  INITIAL_SIZE = 500
-  w,h = image.size
+  iw,ih = image.size
+  INITIAL_SIZE = 2*iw
   opencv_img = np.array(design)
-  tile = np.tile(opencv_img,(4,4,1))
+  tile = np.tile(opencv_img,(int(iw/design.size[0]),1,1))
   src = tile
   r = INITIAL_SIZE / src.shape[1]
   dim = (INITIAL_SIZE, int(src.shape[0] * r))
   src = cv2.resize(src, dim, interpolation=cv2.INTER_AREA)
 
   h,w,_ = src.shape
-  srcs = np.array([[0,0],[0,w],[h,w],[h,0]],np.float32)
-  dst = np.array([[0,((1*w/2)-150)],[0,((1*w/2)+150)],[h,w],[h,0]],np.float32)
+  print(h,w)
+  srcs = np.array([[0,0],[w,0],[w,h],[0,h]],np.float32)
+  dst = np.array([[((1*w/4)-150),0],[((3*w/4)+150),0],[w,h],[0,h]],np.float32)
 
   # Get the homographic transform
   M1 = cv2.getPerspectiveTransform(srcs,dst)
 
   # Warp the image
   dst = cv2.warpPerspective(src, M1, (src.shape[1], src.shape[0]),flags = cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue = [0, 0, 0, 0])
-  dst = cv2.rotate(dst, cv2.ROTATE_90_CLOCKWISE)
-  cropped_design = dst[:,100:400]
+  # dst = cv2.rotate(dst, cv2.ROTATE_90_CLOCKWISE)
+  cropped_design = dst[:,int((1*w/4)-150):int((3*w/4)+150)]#dst[:,100:400]
 
   design_pil = Image.fromarray(cropped_design)
   width, height = design_pil.size
-  resize_ratio = min(w / width, h / (height*factor))
-  new_design = design_pil.resize((int(width * resize_ratio), int(height * resize_ratio)))
+  resize_ratio = iw / width#min(iw / width, ih / (height*factor))
+  new_design = design_pil.resize((int(iw), int(ih * 0.5)))
   return new_design
 
 def load_model():
